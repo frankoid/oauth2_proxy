@@ -84,16 +84,26 @@ func (p *OIDCProvider) redeemRefreshToken(s *sessions.SessionState) (err error) 
 	if err != nil {
 		return fmt.Errorf("failed to get token: %v", err)
 	}
-	newSession, err := p.createSessionState(ctx, token)
-	if err != nil {
-		return fmt.Errorf("unable to update session: %v", err)
+
+	_, present := token.Extra("id_token").(string)
+
+	if present {
+		newSession, err := p.createSessionState(ctx, token)
+		if err != nil {
+			return fmt.Errorf("unable to update session: %v", err)
+		}
+		s.AccessToken = newSession.AccessToken
+		s.IDToken = newSession.IDToken
+		s.RefreshToken = newSession.RefreshToken
+		s.CreatedAt = newSession.CreatedAt
+		s.ExpiresOn = newSession.ExpiresOn
+		s.Email = newSession.Email
+	} else {
+		s.AccessToken = token.RefreshToken
+		s.RefreshToken = token.AccessToken
+		s.CreatedAt = time.Now()
 	}
-	s.AccessToken = newSession.AccessToken
-	s.IDToken = newSession.IDToken
-	s.RefreshToken = newSession.RefreshToken
-	s.CreatedAt = newSession.CreatedAt
-	s.ExpiresOn = newSession.ExpiresOn
-	s.Email = newSession.Email
+
 	return
 }
 
