@@ -8,6 +8,7 @@ import (
 
 	oidc "github.com/coreos/go-oidc"
 	"github.com/pusher/oauth2_proxy/pkg/apis/sessions"
+	"github.com/pusher/oauth2_proxy/pkg/logger"
 	"github.com/pusher/oauth2_proxy/pkg/requests"
 
 	"golang.org/x/oauth2"
@@ -159,6 +160,9 @@ func (p *OIDCProvider) createSessionState(ctx context.Context, token *oauth2.Tok
 	if !p.AllowUnverifiedEmail && claims.Verified != nil && !*claims.Verified {
 		return nil, fmt.Errorf("email in id_token (%s) isn't verified", claims.Email)
 	}
+
+	// December 6th 2019, 20:01:57.591[2019/12/06 20:01:57] [oidc.go:164] createSessionState: token.Expiry = 2019-12-06 20:04:56.572004455 +0000 UTC m=+303.893260434, idToken.Expiry = 2019-12-06 20:17:57 +0000 UTC
+	logger.Printf("createSessionState: token.Expiry = %v, idToken.Expiry = %v", token.Expiry, idToken.Expiry)
 
 	return &sessions.SessionState{
 		AccessToken:  token.AccessToken,
